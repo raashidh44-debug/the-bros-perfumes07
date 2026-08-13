@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE BROS | Luxury Fragrances & Decants</title>
+    <!-- Chart.js for Admin Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #0b0b0d;
+            --card-bg: #141418;
+            --modal-bg: #1a1a20;
+            --gold: #d4af37;
+            --gold-hover: #f3cf65;
+            --text-light: #f5f5f7;
+            --text-muted: #9a9a9e;
+            --border: #2a2a32;
+            --danger: #e74c3c;
+            --success: #2ecc71;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cinzel', 'Segoe UI', sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-light); padding-bottom: 60px; }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-color); }
+        ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 4px; }
+
+        /* Header */
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 18px 5%; background: rgba(11, 11, 13, 0.95);
+            position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+        }
+        .logo { font-size: 2rem; font-weight: 800; letter-spacing: 5px; color: var(--gold); text-transform: uppercase; cursor: pointer; }
+        
+        .nav-links { display: flex; gap: 15px; align-items: center; }
+        .btn-gold {
+            background: linear-gradient(135deg, #d4af37, #aa820a);
+            color: #000; font-weight: 700; border: none; padding: 10px 20px;
+            border-radius: 4px; cursor: pointer; transition: 0.3s; text-transform: uppercase; font-size: 0.85rem;
+        }
+        .btn-gold:hover { background: linear-gradient(135deg, #f3cf65, #d4af37); transform: translateY(-2px); }
+        .btn-outline {
+            background: transparent; color: var(--gold); border: 1px solid var(--gold);
+            padding: 8px 16px; border-radius: 4px; cursor: pointer; transition: 0.3s; font-size: 0.85rem;
+        }
+        .btn-outline:hover { background: var(--gold); color: #000; }
+        .btn-danger { background: var(--danger); color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+
+        /* Hero Banner */
+        .hero {
+            text-align: center; padding: 60px 20px;
+            background: radial-gradient(circle at center, #222017 0%, var(--bg-color) 70%);
+            border-bottom: 1px solid var(--border);
+        }
+        .hero h1 { font-size: 2.8rem; color: var(--gold); letter-spacing: 4px; margin-bottom: 15px; }
+        .hero p { color: var(--text-muted); font-size: 1rem; max-width: 650px; margin: 0 auto; line-height: 1.6; }
+
+        /* Homepage Clean Grid */
+        .section-title { text-align: center; margin: 40px 0 20px; color: var(--gold); letter-spacing: 3px; font-size: 1.8rem; }
+        .product-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 25px; padding: 0 5%; max-width: 1400px; margin: 0 auto;
+        }
+
+        .product-card {
+            background: var(--card-bg); border-radius: 8px; overflow: hidden;
+            border: 1px solid var(--border); transition: 0.3s; position: relative; cursor: pointer;
+            display: flex; flex-direction: column; text-align: center;
+        }
+        .product-card:hover { border-color: var(--gold); transform: translateY(-5px); box-shadow: 0 10px 25px rgba(212, 175, 55, 0.15); }
+        
+        .img-container { position: relative; width: 100%; height: 280px; background: #000; }
+        .product-img { width: 100%; height: 100%; object-fit: cover; }
+        
+        /* Discount Gold Badge */
+        .discount-badge {
+            position: absolute; top: 12px; right: 12px;
+            background: linear-gradient(135deg, #d4af37, #aa820a);
+            color: #000; font-weight: 800; font-size: 0.85rem; padding: 5px 10px;
+            border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        .product-card-body { padding: 18px; }
+        .product-title { font-size: 1.1rem; color: #fff; margin-bottom: 8px; font-weight: 600; }
+        .stock-tag { font-size: 0.8rem; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+        .stock-tag.in { color: var(--success); }
+        .stock-tag.out { color: var(--danger); }
+
+        /* Detail Modal Page */
+        .detail-layout { display: flex; gap: 30px; flex-wrap: wrap; }
+        .detail-gallery { flex: 1; min-width: 280px; }
+        .main-detail-img { width: 100%; height: 320px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 10px; }
+        .thumbs { display: flex; gap: 10px; }
+        .thumb-img { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border); cursor: pointer; }
+        .thumb-img:hover { border-color: var(--gold); }
+        .detail-info { flex: 1.2; min-width: 280px; text-align: left; }
+        .old-price { text-decoration: line-through; color: var(--text-muted); font-size: 1rem; margin-right: 10px; }
+        .current-price { color: var(--gold); font-size: 1.5rem; font-weight: bold; }
+
+        /* Modals Base */
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center;
+            z-index: 1000; padding: 20px; backdrop-filter: blur(5px);
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: var(--modal-bg); width: 100%; max-width: 600px; padding: 30px;
+            border-radius: 10px; border: 1px solid var(--gold); position: relative; max-height: 90vh; overflow-y: auto;
+        }
+        .close-modal { position: absolute; top: 15px; right: 20px; font-size: 1.5rem; cursor: pointer; color: var(--text-muted); }
+        .close-modal:hover { color: var(--gold); }
+
+        .form-group { margin-bottom: 15px; text-align: left; }
+        .form-group label { display: block; font-size: 0.85rem; color: var(--gold); margin-bottom: 5px; }
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%; padding: 10px; background: #0c0c0e; border: 1px solid var(--border);
+            color: #fff; border-radius: 4px; outline: none;
+        }
+        .form-group input:focus { border-color: var(--gold); }
+
+        /* Admin Dashboard Styles */
+        .admin-modal { max-width: 1000px; }
+        .admin-tabs { display: flex; gap: 10px; border-bottom: 1px solid var(--border); margin-bottom: 20px; overflow-x: auto; }
+        .tab-btn { padding: 10px 18px; background: transparent; color: var(--text-muted); border: none; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+        .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); font-weight: bold; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.85rem; }
+        .table th, .table td { padding: 10px; border: 1px solid var(--border); text-align: left; }
+        .table th { background: #101014; color: var(--gold); }
+
+        footer { margin-top: 60px; padding: 30px; text-align: center; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 0.85rem; }
+        .admin-link { color: #333; cursor: pointer; font-size: 0.75rem; display: inline-block; margin-top: 10px; }
+        .admin-link:hover { color: var(--gold); }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="logo" onclick="window.scrollTo(0,0)">THE BROS</div>
+        <div class="nav-links">
+            <span id="userGreeting" style="color: var(--gold); font-size: 0.85rem;"></span>
+            <button class="btn-outline" id="authBtn" onclick="openModal('authModal')">Sign In</button>
+        </div>
+    </header>
+
+    <!-- Welcome Banner -->
+    <section class="hero">
+        <h1>WELCOME TO THE BROS</h1>
+        <p>Explore our exclusive collection of luxury original bottles and premium 10ml travel decants. Click any product to view full scent details, photo gallery, and place orders directly via WhatsApp.</p>
+    </section>
+
+    <!-- Homepage Product Grid (Only Image, Title, Stock Status & Gold Discount Badge) -->
+    <h2 class="section-title">OUR COLLECTION</h2>
+    <div class="product-grid" id="productGrid"></div>
+
+    <!-- Product Detail Modal -->
+    <div class="modal" id="detailModal">
+        <div class="modal-content" style="max-width: 850px;">
+            <span class="close-modal" onclick="closeModal('detailModal')">✕</span>
+            <div class="detail-layout">
+                <div class="detail-gallery">
+                    <img id="detailMainImg" src="" class="main-detail-img">
+                    <div class="thumbs" id="detailThumbs"></div>
+                </div>
+                <div class="detail-info">
+                    <h2 id="detailTitle" style="color: #fff; margin-bottom: 10px;"></h2>
+                    <div id="detailStockTag" style="margin-bottom: 15px;"></div>
+                    <p id="detailDescription" style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px; line-height: 1.5;"></p>
+                    
+                    <div class="form-group">
+                        <label>Select Size Option:</label>
+                        <select id="detailSizeSelect" onchange="updateDetailPrice()"></select>
+                    </div>
+
+                    <div style="margin: 20px 0;">
+                        <span id="detailOldPrice" class="old-price"></span>
+                        <span id="detailCurrentPrice" class="current-price"></span>
+                    </div>
+
+                    <button class="btn-gold" id="detailActionBtn" style="width: 100%; padding: 14px; font-size: 1rem;"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Registration / Sign In Modal -->
+    <div class="modal" id="authModal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('authModal')">✕</span>
+            <h2 style="color: var(--gold); margin-bottom: 20px; text-align: center;">CREATE YOUR ACCOUNT</h2>
+            <form id="registerForm" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label>Full Name *</label>
+                    <input type="text" id="regName" required>
+                </div>
+                <div class="form-group">
+                    <label>Phone Number 1 (Primary) *</label>
+                    <input type="tel" id="regPhone1" placeholder="07XXXXXXXX" required>
+                </div>
+                <div class="form-group">
+                    <label>Phone Number 2 (Optional)</label>
+                    <input type="tel" id="regPhone2" placeholder="07XXXXXXXX">
+                </div>
+                <div class="form-group">
+                    <label>Email Address *</label>
+                    <input type="email" id="regEmail" required>
+                </div>
+                <div class="form-group">
+                    <label>Password *</label>
+                    <input type="password" id="regPass" required minlength="6">
+                </div>
+                <div class="form-group">
+                    <label>Confirm Password *</label>
+                    <input type="password" id="regPassConfirm" required>
+                    <div style="color: var(--danger); font-size: 0.8rem; display: none;" id="passError">Passwords do not match!</div>
+                </div>
+                <div class="form-group">
+                    <label>Home Address (For Delivery) *</label>
+                    <textarea id="regAddress" rows="3" required></textarea>
+                </div>
+                <button type="submit" class="btn-gold" style="width: 100%;">Sign Up & Continue</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Secret Admin Password Modal -->
+    <div class="modal" id="adminLoginModal">
+        <div class="modal-content" style="max-width: 400px;">
+            <span class="close-modal" onclick="closeModal('adminLoginModal')">✕</span>
+            <h2 style="color: var(--gold); margin-bottom: 20px; text-align: center;">ADMIN LOGIN</h2>
+            <div class="form-group">
+                <label>Enter Secret Password</label>
+                <input type="password" id="adminPassInput">
+            </div>
+            <button class="btn-gold" style="width: 100%;" onclick="verifyAdmin()">Login to Dashboard</button>
+        </div>
+    </div>
+
+    <!-- Admin Panel Modal -->
+    <div class="modal" id="adminPanelModal">
+        <div class="modal-content admin-modal">
+            <span class="close-modal" onclick="closeModal('adminPanelModal')">✕</span>
+            <h2 style="color: var(--gold); margin-bottom: 15px;">THE BROS - ADMIN DASHBOARD</h2>
+            
+            <div class="admin-tabs">
+                <button class="tab-btn active" onclick="switchAdminTab('storeProductsTab')">Store Products Manager</button>
+                <button class="tab-btn" onclick="switchAdminTab('addProductTab')">Add New Product</button>
+                <button class="tab-btn" onclick="switchAdminTab('salesChartTab')">Sales & Profit</button>
+                <button class="tab-btn" onclick="switchAdminTab('customerDetailsTab')">Customer Database</button>
+            </div>
+
+            <!-- Tab 1: Store Products Manager (Edit/Remove/Quantity/Discount) -->
+            <div class="tab-content active" id="storeProductsTab">
+                <h3 style="color: var(--gold); margin-bottom: 10px;">Manage Catalog</h3>
+                <div style="overflow-x: auto;">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Image</th>
+                                <th>Title</th>
+                                <th>Stock Qty</th>
+                                <th>Discount %</th>
+                                <th>100ml Price</th>
+                                <th>10ml Price</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminProductsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab 2: Add New Product (with Photo File Upload) -->
+            <div class="tab-content" id="addProductTab">
+                <form id="addProductForm" onsubmit="handleAddProduct(event)">
+                    <div class="form-group">
+                        <label>Perfume Title</label>
+                        <input type="text" id="pTitle" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Upload Photos (Select up to 3 images from device)</label>
+                        <input type="file" id="pFiles" accept="image/*" multiple required>
+                    </div>
+                    <div class="form-group">
+                        <label>Details & Scent Notes</label>
+                        <textarea id="pDetails" rows="3" required></textarea>
+                    </div>
+                    <div style="display: flex; gap: 15px;">
+                        <div class="form-group" style="flex: 1;">
+                            <label>Stock Quantity</label>
+                            <input type="number" id="pQuantity" value="10" min="0" required>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label>Discount Percentage (%)</label>
+                            <input type="number" id="pDiscount" value="0" min="0" max="99">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Size Options Available</label>
+                        <select id="pAvailability" onchange="toggleSizeInputs()">
+                            <option value="both">Both Available (100ml Bottle & 10ml Decant)</option>
+                            <option value="100ml">100ml Bottle Only</option>
+                            <option value="10ml">10ml Decant Only</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; gap: 15px;">
+                        <div class="form-group" id="group100ml" style="flex: 1;">
+                            <label>100ml Bottle Base Price (LKR)</label>
+                            <input type="number" id="pPrice100ml" value="0">
+                        </div>
+                        <div class="form-group" id="group10ml" style="flex: 1;">
+                            <label>10ml Decant Base Price (LKR)</label>
+                            <input type="number" id="pPrice10ml" value="0">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-gold">Publish Product to Store</button>
+                </form>
+            </div>
+
+            <!-- Tab 3: Sales & Profit Chart -->
+            <div class="tab-content" id="salesChartTab">
+                <h3 style="color: var(--gold); margin-bottom: 10px;">Profit & Cost Tracker</h3>
+                <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label>Add Cost (LKR)</label>
+                        <input type="number" id="addCostInput" placeholder="e.g. 15000">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>Add Revenue (LKR)</label>
+                        <input type="number" id="addRevenueInput" placeholder="e.g. 28000">
+                    </div>
+                    <button class="btn-gold" style="height: 40px; margin-top: 22px;" onclick="addFinancialRecord()">Log Entry</button>
+                </div>
+                <div style="background: #000; padding: 15px; border-radius: 8px;">
+                    <canvas id="profitChart" height="200"></canvas>
+                </div>
+            </div>
+
+            <!-- Tab 4: Customer Details -->
+            <div class="tab-content" id="customerDetailsTab">
+                <h3 style="color: var(--gold);">Registered Customers</h3>
+                <div style="overflow-x: auto;">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Phone 1</th>
+                                <th>Phone 2</th>
+                                <th>Email</th>
+                                <th>Address</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customerTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2026 THE BROS PERFUMES & DECANTS. All Rights Reserved.</p>
+        <span class="admin-link" onclick="openAdminLogin()">🔒 Secret Admin Access</span>
+    </footer>
+
+    <script>
+        const WHATSAPP_NUMBER = "94784744888"; // 07847 44 888 Sri Lanka Target
+        const ADMIN_PASSWORD = "brosadmin";
+
+        // Initial Sample Products
+        const defaultProducts = [
+            {
+                id: 1, title: "Royal Oud Velvet",
+                images: ["https://images.unsplash.com/photo-1523293182086-7651a899d37f?auto=format&fit=crop&w=600&q=80"],
+                details: "A rich blend of saffron, rare Cambodian oud, and warm amber. Designed for formal evenings and special occasions.",
+                availability: "both", price100ml: 12500, price10ml: 2800, quantity: 8, discount: 15
+            },
+            {
+                id: 2, title: "Ceylon Cardamom & Cedar",
+                images: ["https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=600&q=80"],
+                details: "Fresh green cardamom harvested locally blended with smooth Atlas cedarwood and clean musk.",
+                availability: "10ml", price100ml: 0, price10ml: 2200, quantity: 15, discount: 0
+            },
+            {
+                id: 3, title: "Midnight Jasmine Elixir",
+                images: ["https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?auto=format&fit=crop&w=600&q=80"],
+                details: "An enchanting floral profile featuring night-blooming jasmine, bourbon vanilla, and cream sandalwood.",
+                availability: "100ml", price100ml: 9800, price10ml: 0, quantity: 0, discount: 20
+            }
+        ];
+
+        // State Storage
+        let products = JSON.parse(localStorage.getItem('bros_products_v2')) || defaultProducts;
+        let currentUser = JSON.parse(localStorage.getItem('bros_currentUser')) || null;
+        let customers = JSON.parse(localStorage.getItem('bros_customers')) || [];
+        let financials = JSON.parse(localStorage.getItem('bros_financials')) || { costs: [10000], revenues: [25000], labels: ['Batch 1'] };
+        let selectedProductForDetail = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderHomepageGrid();
+            updateUserNav();
+        });
+
+        // 01. Homepage Renderer (Only Image, Name, Stock, & Gold Discount Badge)
+        function renderHomepageGrid() {
+            const grid = document.getElementById('productGrid');
+            grid.innerHTML = products.map(p => {
+                const isAvailable = p.quantity > 0;
+                return `
+                <div class="product-card" onclick="openProductDetail(${p.id})">
+                    <div class="img-container">
+                        <img src="${p.images[0]}" class="product-img" alt="${p.title}">
+                        ${p.discount > 0 ? `<div class="discount-badge">${p.discount}% OFF</div>` : ''}
+                    </div>
+                    <div class="product-card-body">
+                        <div class="product-title">${p.title}</div>
+                        <div class="stock-tag ${isAvailable ? 'in' : 'out'}">
+                            ${isAvailable ? `In Stock (${p.quantity} Available)` : 'Out of Stock'}
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        // Product Detail Page Logic
+        function openProductDetail(id) {
+            selectedProductForDetail = products.find(p => p.id === id);
+            const p = selectedProductForDetail;
+
+            document.getElementById('detailTitle').innerText = p.title;
+            document.getElementById('detailDescription').innerText = p.details;
+            
+            // Render Gallery
+            document.getElementById('detailMainImg').src = p.images[0];
+            const thumbsContainer = document.getElementById('detailThumbs');
+            thumbsContainer.innerHTML = p.images.map(img => `
+                <img src="${img}" class="thumb-img" onclick="document.getElementById('detailMainImg').src='${img}'">
+            `).join('');
+
+            // Render Stock Tag
+            const isAvailable = p.quantity > 0;
+            document.getElementById('detailStockTag').innerHTML = `
+                <span class="stock-tag ${isAvailable ? 'in' : 'out'}">
+                    ${isAvailable ? `✓ In Stock (${p.quantity} Units Left)` : '✕ Currently Out of Stock'}
+                </span>`;
+
+            // Size Selector
+            const sizeSelect = document.getElementById('detailSizeSelect');
+            sizeSelect.innerHTML = '';
+            if(p.availability === 'both' || p.availability === '100ml') {
+                sizeSelect.innerHTML += `<option value="100ml">100ml Bottle</option>`;
+            }
+            if(p.availability === 'both' || p.availability === '10ml') {
+                sizeSelect.innerHTML += `<option value="10ml">10ml Decant</option>`;
+            }
+
+            updateDetailPrice();
+
+            // Buy Now / Wishlist Button
+            const actionBtn = document.getElementById('detailActionBtn');
+            if(isAvailable) {
+                actionBtn.innerText = "BUY NOW (ORDER ON WHATSAPP)";
+                actionBtn.className = "btn-gold";
+                actionBtn.onclick = () => executeWhatsAppOrder();
+            } else {
+                actionBtn.innerText = "♡ ADD TO WISHLIST";
+                actionBtn.className = "btn-outline";
+                actionBtn.onclick = () => {
+                    alert(`"${p.title}" added to wishlist! We'll notify you on WhatsApp when restocked.`);
+                };
+            }
+
+            openModal('detailModal');
+        }
+
+        function updateDetailPrice() {
+            const p = selectedProductForDetail;
+            const size = document.getElementById('detailSizeSelect').value;
+            const basePrice = size === '100ml' ? p.price100ml : p.price10ml;
+            
+            const oldPriceEl = document.getElementById('detailOldPrice');
+            const currentPriceEl = document.getElementById('detailCurrentPrice');
+
+            if(p.discount > 0) {
+                const finalPrice = basePrice * (1 - p.discount / 100);
+                oldPriceEl.innerText = `LKR ${basePrice.toLocaleString()}`;
+                currentPriceEl.innerText = `LKR ${Math.round(finalPrice).toLocaleString()}`;
+            } else {
+                oldPriceEl.innerText = '';
+                currentPriceEl.innerText = `LKR ${basePrice.toLocaleString()}`;
+            }
+        }
+
+        function executeWhatsAppOrder() {
+            if(!currentUser) {
+                alert("Please Sign In / Register before purchasing.");
+                closeModal('detailModal');
+                openModal('authModal');
+                return;
+            }
+
+            const p = selectedProductForDetail;
+            const size = document.getElementById('detailSizeSelect').value;
+            const basePrice = size === '100ml' ? p.price100ml : p.price10ml;
+            const finalPrice = p.discount > 0 ? Math.round(basePrice * (1 - p.discount / 100)) : basePrice;
+
+            const msg = `Hello *THE BROS*, I want to buy:%0A%0A` +
+                `*Product:* ${p.title}%0A` +
+                `*Size:* ${size}%0A` +
+                `*Price:* LKR ${finalPrice.toLocaleString()} ${p.discount > 0 ? `(${p.discount}% OFF)` : ''}%0A%0A` +
+                `*Customer Shipping Details:*%0A` +
+                `• *Name:* ${currentUser.name}%0A` +
+                `• *Phone 1:* ${currentUser.phone1}%0A` +
+                `• *Phone 2:* ${currentUser.phone2}%0A` +
+                `• *Email:* ${currentUser.email}%0A` +
+                `• *Delivery Address:* ${currentUser.address}`;
+
+            window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`, '_blank');
+        }
+
+        // Account / Auth Handling
+        function updateUserNav() {
+            const greeting = document.getElementById('userGreeting');
+            const authBtn = document.getElementById('authBtn');
+            if(currentUser) {
+                greeting.innerText = `Hello, ${currentUser.name}`;
+                authBtn.innerText = `Sign Out`;
+                authBtn.onclick = () => {
+                    currentUser = null;
+                    localStorage.removeItem('bros_currentUser');
+                    updateUserNav();
+                };
+            } else {
+                greeting.innerText = ``;
+                authBtn.innerText = `Sign In`;
+                authBtn.onclick = () => openModal('authModal');
+            }
+        }
+
+        function handleRegister(e) {
+            e.preventDefault();
+            const pass = document.getElementById('regPass').value;
+            const passConfirm = document.getElementById('regPassConfirm').value;
+            
+            if(pass !== passConfirm) {
+                document.getElementById('passError').style.display = 'block';
+                return;
+            }
+
+            currentUser = {
+                name: document.getElementById('regName').value,
+                phone1: document.getElementById('regPhone1').value,
+                phone2: document.getElementById('regPhone2').value || 'N/A',
+                email: document.getElementById('regEmail').value,
+                address: document.getElementById('regAddress').value
+            };
+
+            customers.push(currentUser);
+            localStorage.setItem('bros_currentUser', JSON.stringify(currentUser));
+            localStorage.setItem('bros_customers', JSON.stringify(customers));
+
+            updateUserNav();
+            closeModal('authModal');
+            alert('Account created successfully!');
+        }
+
+        // 02. Admin Dashboard & File Upload
+        function openAdminLogin() { openModal('adminLoginModal'); }
+        
+        function verifyAdmin() {
+            if(document.getElementById('adminPassInput').value === ADMIN_PASSWORD) {
+                closeModal('adminLoginModal');
+                openModal('adminPanelModal');
+                renderAdminProductsTable();
+                renderCustomerTable();
+                initChart();
+            } else alert('Incorrect Admin Password!');
+        }
+
+        function switchAdminTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        function toggleSizeInputs() {
+            const avail = document.getElementById('pAvailability').value;
+            document.getElementById('group100ml').style.display = (avail === 'both' || avail === '100ml') ? 'block' : 'none';
+            document.getElementById('group10ml').style.display = (avail === 'both' || avail === '10ml') ? 'block' : 'none';
+        }
+
+        // Add Product via Local File Upload
+        async function handleAddProduct(e) {
+            e.preventDefault();
+            const files = document.getElementById('pFiles').files;
+            
+            if(files.length === 0) {
+                alert("Please select at least 1 image file!");
+                return;
+            }
+
+            // Convert local image files to base64 URLs
+            const imagePromises = Array.from(files).slice(0, 3).map(file => {
+                return new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.readAsDataURL(file);
+                });
+            });
+
+            const uploadedBase64Images = await Promise.all(imagePromises);
+
+            const newProd = {
+                id: Date.now(),
+                title: document.getElementById('pTitle').value,
+                images: uploadedBase64Images,
+                details: document.getElementById('pDetails').value,
+                quantity: parseInt(document.getElementById('pQuantity').value) || 0,
+                discount: parseInt(document.getElementById('pDiscount').value) || 0,
+                availability: document.getElementById('pAvailability').value,
+                price100ml: parseFloat(document.getElementById('pPrice100ml').value) || 0,
+                price10ml: parseFloat(document.getElementById('pPrice10ml').value) || 0
+            };
+
+            products.push(newProd);
+            saveProducts();
+            renderHomepageGrid();
+            renderAdminProductsTable();
+            alert('Product added with photo upload!');
+            document.getElementById('addProductForm').reset();
+            switchAdminTab('storeProductsTab');
+        }
+
+        // Render Product Manager Tab in Admin
+        function renderAdminProductsTable() {
+            const tbody = document.getElementById('adminProductsTable');
+            tbody.innerHTML = products.map(p => `
+                <tr>
+                    <td><img src="${p.images[0]}" style="width: 45px; height: 45px; object-fit: cover; border-radius: 4px;"></td>
+                    <td><b>${p.title}</b></td>
+                    <td>
+                        <input type="number" value="${p.quantity}" style="width: 60px;" onchange="updateProductProperty(${p.id}, 'quantity', this.value)">
+                    </td>
+                    <td>
+                        <input type="number" value="${p.discount}" style="width: 60px;" onchange="updateProductProperty(${p.id}, 'discount', this.value)"> %
+                    </td>
+                    <td>
+                        <input type="number" value="${p.price100ml}" style="width: 80px;" onchange="updateProductProperty(${p.id}, 'price100ml', this.value)">
+                    </td>
+                    <td>
+                        <input type="number" value="${p.price10ml}" style="width: 80px;" onchange="updateProductProperty(${p.id}, 'price10ml', this.value)">
+                    </td>
+                    <td>
+                        <button class="btn-danger" onclick="deleteProduct(${p.id})">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function updateProductProperty(id, key, value) {
+            const p = products.find(item => item.id === id);
+            if(p) {
+                p[key] = parseFloat(value) || 0;
+                saveProducts();
+                renderHomepageGrid();
+            }
+        }
+
+        function deleteProduct(id) {
+            if(confirm('Are you sure you want to delete this perfume?')) {
+                products = products.filter(p => p.id !== id);
+                saveProducts();
+                renderHomepageGrid();
+                renderAdminProductsTable();
+            }
+        }
+
+        function saveProducts() {
+            localStorage.setItem('bros_products_v2', JSON.stringify(products));
+        }
+
+        function renderCustomerTable() {
+            document.getElementById('customerTableBody').innerHTML = customers.map(c => `
+                <tr>
+                    <td>${c.name}</td>
+                    <td>${c.phone1}</td>
+                    <td>${c.phone2}</td>
+                    <td>${c.email}</td>
+                    <td>${c.address}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Profit Chart Logic
+        let myChart = null;
+        function initChart() {
+            const ctx = document.getElementById('profitChart').getContext('2d');
+            if(myChart) myChart.destroy();
+            myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: financials.labels,
+                    datasets: [
+                        { label: 'Cost (LKR)', data: financials.costs, backgroundColor: '#e74c3c' },
+                        { label: 'Revenue (LKR)', data: financials.revenues, backgroundColor: '#2ecc71' }
+                    ]
+                },
+                options: { responsive: true, plugins: { legend: { labels: { color: '#fff' } } } }
+            });
+        }
+
+        function addFinancialRecord() {
+            financials.labels.push(`Entry ${financials.labels.length + 1}`);
+            financials.costs.push(parseFloat(document.getElementById('addCostInput').value) || 0);
+            financials.revenues.push(parseFloat(document.getElementById('addRevenueInput').value) || 0);
+            localStorage.setItem('bros_financials', JSON.stringify(financials));
+            initChart();
+        }
+
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+    </script>
+</body>
+</html>
