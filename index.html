@@ -4,8 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>THE BROS | Luxury Fragrances & Decants</title>
+
+    <!-- Google Firebase Cloud Database SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+    <script>
+      // Your Google Cloud Firebase Configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyCRmV2rns-pqGY1y_Pgncu6xKjxg5t3TQ0",
+        authDomain: "the-bros-perfumes.firebaseapp.com",
+        databaseURL: "https://the-bros-perfumes-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "the-bros-perfumes",
+        storageBucket: "the-bros-perfumes.firebasestorage.app",
+        messagingSenderId: "85870895365",
+        appId: "1:85870895365:web:313bc8e572eeccdb70576c",
+        measurementId: "G-C8P4FFPXTJ"
+      };
+
+      // Initialize Google Cloud Firebase
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.database();
+    </script>
+
     <!-- Chart.js for Admin Analytics -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <style>
         :root {
             --bg-color: #0b0b0d;
@@ -156,7 +180,7 @@
         <p>Explore our exclusive collection of luxury original bottles and premium 10ml travel decants. Click any product to view full scent details, photo gallery, and place orders directly via WhatsApp.</p>
     </section>
 
-    <!-- Homepage Product Grid (Only Image, Title, Stock Status & Gold Discount Badge) -->
+    <!-- Homepage Product Grid -->
     <h2 class="section-title">OUR COLLECTION</h2>
     <div class="product-grid" id="productGrid"></div>
 
@@ -256,7 +280,7 @@
                 <button class="tab-btn" onclick="switchAdminTab('customerDetailsTab')">Customer Database</button>
             </div>
 
-            <!-- Tab 1: Store Products Manager (Edit/Remove/Quantity/Discount) -->
+            <!-- Tab 1: Store Products Manager -->
             <div class="tab-content active" id="storeProductsTab">
                 <h3 style="color: var(--gold); margin-bottom: 10px;">Manage Catalog</h3>
                 <div style="overflow-x: auto;">
@@ -277,7 +301,7 @@
                 </div>
             </div>
 
-            <!-- Tab 2: Add New Product (with Photo File Upload) -->
+            <!-- Tab 2: Add New Product -->
             <div class="tab-content" id="addProductTab">
                 <form id="addProductForm" onsubmit="handleAddProduct(event)">
                     <div class="form-group">
@@ -371,10 +395,10 @@
     </footer>
 
     <script>
-        const WHATSAPP_NUMBER = "94784744888"; // 07847 44 888 Sri Lanka Target
+        const WHATSAPP_NUMBER = "94784744888";
         const ADMIN_PASSWORD = "brosadmin";
 
-        // Initial Sample Products
+        // Default products array used if database is empty
         const defaultProducts = [
             {
                 id: 1, title: "Royal Oud Velvet",
@@ -396,19 +420,58 @@
             }
         ];
 
-        // State Storage
-        let products = JSON.parse(localStorage.getItem('bros_products_v2')) || defaultProducts;
+        // Global State Variables
+        let products = [];
         let currentUser = JSON.parse(localStorage.getItem('bros_currentUser')) || null;
-        let customers = JSON.parse(localStorage.getItem('bros_customers')) || [];
-        let financials = JSON.parse(localStorage.getItem('bros_financials')) || { costs: [10000], revenues: [25000], labels: ['Batch 1'] };
+        let customers = [];
+        let financials = { costs: [10000], revenues: [25000], labels: ['Batch 1'] };
         let selectedProductForDetail = null;
 
         document.addEventListener('DOMContentLoaded', () => {
-            renderHomepageGrid();
+            syncFromFirebase();
             updateUserNav();
         });
 
-        // 01. Homepage Renderer (Only Image, Name, Stock, & Gold Discount Badge)
+        // 1. REAL-TIME GOOGLE FIREBASE CLOUD SYNCING
+        function syncFromFirebase() {
+            // Live product sync
+            db.ref('products').on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    products = Object.values(data);
+                } else {
+                    // Seed initial data if database is empty
+                    defaultProducts.forEach(p => db.ref('products/' + p.id).set(p));
+                    products = defaultProducts;
+                }
+                renderHomepageGrid();
+                renderAdminProductsTable();
+            });
+
+            // Live customer sync
+            db.ref('customers').on('value', (snapshot) => {
+                const data = snapshot.val();
+                customers = data ? Object.values(data) : [];
+                renderCustomerTable();
+            });
+
+            // Live financial record sync
+            db.ref('financials').on('value', (snapshot) => {
+                const data = snapshot.val();
+                if(data) financials = data;
+            });
+        }
+
+        // Save Products to Google Cloud
+        function saveProductsToCloud(product) {
+            db.ref('products/' + product.id).set(product);
+        }
+
+        function deleteProductFromCloud(id) {
+            db.ref('products/' + id).remove();
+        }
+
+        // 2. HOMEPAGE RENDERER
         function renderHomepageGrid() {
             const grid = document.getElementById('productGrid');
             grid.innerHTML = products.map(p => {
@@ -429,7 +492,7 @@
             }).join('');
         }
 
-        // Product Detail Page Logic
+        // 3. PRODUCT DETAIL LOGIC
         function openProductDetail(id) {
             selectedProductForDetail = products.find(p => p.id === id);
             const p = selectedProductForDetail;
@@ -437,21 +500,18 @@
             document.getElementById('detailTitle').innerText = p.title;
             document.getElementById('detailDescription').innerText = p.details;
             
-            // Render Gallery
             document.getElementById('detailMainImg').src = p.images[0];
             const thumbsContainer = document.getElementById('detailThumbs');
             thumbsContainer.innerHTML = p.images.map(img => `
                 <img src="${img}" class="thumb-img" onclick="document.getElementById('detailMainImg').src='${img}'">
             `).join('');
 
-            // Render Stock Tag
             const isAvailable = p.quantity > 0;
             document.getElementById('detailStockTag').innerHTML = `
                 <span class="stock-tag ${isAvailable ? 'in' : 'out'}">
                     ${isAvailable ? `✓ In Stock (${p.quantity} Units Left)` : '✕ Currently Out of Stock'}
                 </span>`;
 
-            // Size Selector
             const sizeSelect = document.getElementById('detailSizeSelect');
             sizeSelect.innerHTML = '';
             if(p.availability === 'both' || p.availability === '100ml') {
@@ -463,7 +523,6 @@
 
             updateDetailPrice();
 
-            // Buy Now / Wishlist Button
             const actionBtn = document.getElementById('detailActionBtn');
             if(isAvailable) {
                 actionBtn.innerText = "BUY NOW (ORDER ON WHATSAPP)";
@@ -525,7 +584,7 @@
             window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`, '_blank');
         }
 
-        // Account / Auth Handling
+        // 4. ACCOUNT / AUTH HANDLING
         function updateUserNav() {
             const greeting = document.getElementById('userGreeting');
             const authBtn = document.getElementById('authBtn');
@@ -554,7 +613,9 @@
                 return;
             }
 
+            const userId = 'user_' + Date.now();
             currentUser = {
+                id: userId,
                 name: document.getElementById('regName').value,
                 phone1: document.getElementById('regPhone1').value,
                 phone2: document.getElementById('regPhone2').value || 'N/A',
@@ -562,16 +623,16 @@
                 address: document.getElementById('regAddress').value
             };
 
-            customers.push(currentUser);
+            // Save to Google Cloud Database & Local User
+            db.ref('customers/' + userId).set(currentUser);
             localStorage.setItem('bros_currentUser', JSON.stringify(currentUser));
-            localStorage.setItem('bros_customers', JSON.stringify(customers));
 
             updateUserNav();
             closeModal('authModal');
             alert('Account created successfully!');
         }
 
-        // 02. Admin Dashboard & File Upload
+        // 5. ADMIN DASHBOARD
         function openAdminLogin() { openModal('adminLoginModal'); }
         
         function verifyAdmin() {
@@ -607,7 +668,6 @@
                 return;
             }
 
-            // Convert local image files to base64 URLs
             const imagePromises = Array.from(files).slice(0, 3).map(file => {
                 return new Promise((resolve) => {
                     const reader = new FileReader();
@@ -630,11 +690,8 @@
                 price10ml: parseFloat(document.getElementById('pPrice10ml').value) || 0
             };
 
-            products.push(newProd);
-            saveProducts();
-            renderHomepageGrid();
-            renderAdminProductsTable();
-            alert('Product added with photo upload!');
+            saveProductsToCloud(newProd);
+            alert('Product published live to Google Cloud!');
             document.getElementById('addProductForm').reset();
             switchAdminTab('storeProductsTab');
         }
@@ -669,22 +726,14 @@
             const p = products.find(item => item.id === id);
             if(p) {
                 p[key] = parseFloat(value) || 0;
-                saveProducts();
-                renderHomepageGrid();
+                saveProductsToCloud(p);
             }
         }
 
         function deleteProduct(id) {
             if(confirm('Are you sure you want to delete this perfume?')) {
-                products = products.filter(p => p.id !== id);
-                saveProducts();
-                renderHomepageGrid();
-                renderAdminProductsTable();
+                deleteProductFromCloud(id);
             }
-        }
-
-        function saveProducts() {
-            localStorage.setItem('bros_products_v2', JSON.stringify(products));
         }
 
         function renderCustomerTable() {
@@ -721,7 +770,8 @@
             financials.labels.push(`Entry ${financials.labels.length + 1}`);
             financials.costs.push(parseFloat(document.getElementById('addCostInput').value) || 0);
             financials.revenues.push(parseFloat(document.getElementById('addRevenueInput').value) || 0);
-            localStorage.setItem('bros_financials', JSON.stringify(financials));
+            
+            db.ref('financials').set(financials);
             initChart();
         }
 
