@@ -1,142 +1,555 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>THE BROS</title>
-  <style>
-    /* Premium Black & Gold Theme */
-    :root {
-      --bg-color: #0b0b0b;
-      --card-bg: #141414;
-      --gold: #d4af37;
-      --gold-hover: #f3cf65;
-      --text-muted: #a0a0a0;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE BROS | Luxury Fragrances & Decants</title>
+    <!-- Chart.js for Admin Sales Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #0b0b0d;
+            --card-bg: #141418;
+            --modal-bg: #1a1a20;
+            --gold: #d4af37;
+            --gold-hover: #f3cf65;
+            --text-light: #f5f5f7;
+            --text-muted: #9a9a9e;
+            --border: #2a2a32;
+            --danger: #e74c3c;
+            --success: #2ecc71;
+        }
 
-    body {
-      margin: 0;
-      padding: 0;
-      background-color: var(--bg-color);
-      color: #ffffff;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-    }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cinzel', 'Segoe UI', sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-light); padding-bottom: 60px; }
 
-    .container {
-      background-color: var(--card-bg);
-      border: 1px solid rgba(212, 175, 55, 0.2);
-      border-radius: 16px;
-      padding: 40px;
-      width: 100%;
-      max-width: 380px;
-      text-align: center;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
-    }
+        /* Typography & Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-color); }
+        ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 4px; }
 
-    /* Logo Styling */
-    .logo-container img {
-      width: 160px;
-      height: auto;
-      margin-bottom: 20px;
-    }
+        /* Header */
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 18px 5%; background: rgba(11, 11, 13, 0.95);
+            position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+        }
+        .logo { font-size: 2rem; font-weight: 800; letter-spacing: 5px; color: var(--gold); text-transform: uppercase; }
+        
+        .nav-links { display: flex; gap: 15px; align-items: center; }
+        .btn-gold {
+            background: linear-gradient(135deg, #d4af37, #aa820a);
+            color: #000; font-weight: 700; border: none; padding: 10px 20px;
+            border-radius: 4px; cursor: pointer; transition: 0.3s; text-transform: uppercase; font-size: 0.85rem;
+        }
+        .btn-gold:hover { background: linear-gradient(135deg, #f3cf65, #d4af37); transform: translateY(-2px); }
+        .btn-outline {
+            background: transparent; color: var(--gold); border: 1px solid var(--gold);
+            padding: 8px 16px; border-radius: 4px; cursor: pointer; transition: 0.3s; font-size: 0.85rem;
+        }
+        .btn-outline:hover { background: var(--gold); color: #000; }
 
-    /* Sign-In Section (Hidden by default) */
-    .signin-section {
-      display: none; /* Set to 'flex' or toggle via JS when needed */
-      flex-direction: column;
-      gap: 15px;
-      margin-top: 20px;
-    }
+        /* Eye-Catching Welcome Banner */
+        .hero {
+            text-align: center; padding: 70px 20px;
+            background: radial-gradient(circle at center, #222017 0%, var(--bg-color) 70%);
+            border-bottom: 1px solid var(--border);
+        }
+        .hero h1 { font-size: 3rem; color: var(--gold); letter-spacing: 4px; margin-bottom: 15px; }
+        .hero p { color: var(--text-muted); font-size: 1.1rem; max-width: 650px; margin: 0 auto; line-height: 1.6; }
 
-    .input-field {
-      background: #1f1f1f;
-      border: 1px solid #333;
-      border-radius: 8px;
-      padding: 12px 16px;
-      color: #fff;
-      outline: none;
-      transition: border 0.3s;
-    }
+        /* Main Store Grid */
+        .section-title { text-align: center; margin: 40px 0 20px; color: var(--gold); letter-spacing: 3px; font-size: 1.8rem; }
+        .product-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 30px; padding: 0 5%; max-width: 1400px; margin: 0 auto;
+        }
 
-    .input-field:focus {
-      border-color: var(--gold);
-    }
+        .product-card {
+            background: var(--card-bg); border-radius: 8px; overflow: hidden;
+            border: 1px solid var(--border); transition: 0.3s; display: flex; flex-direction: column;
+        }
+        .product-card:hover { border-color: var(--gold); transform: translateY(-5px); box-shadow: 0 10px 25px rgba(212, 175, 55, 0.15); }
+        .product-img { width: 100%; height: 260px; object-fit: cover; background: #000; }
+        .product-body { padding: 20px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .product-title { font-size: 1.2rem; color: #fff; margin-bottom: 8px; font-weight: 600; }
+        .product-desc { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px; line-height: 1.4; }
+        
+        .variant-selector { margin-bottom: 15px; }
+        .variant-selector label { font-size: 0.8rem; color: var(--gold); display: block; margin-bottom: 5px; }
+        .variant-select {
+            width: 100%; padding: 8px; background: #0b0b0d; color: var(--text-light);
+            border: 1px solid var(--border); border-radius: 4px; outline: none;
+        }
 
-    .btn-gold {
-      background-color: var(--gold);
-      color: #000;
-      font-weight: bold;
-      border: none;
-      padding: 12px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
+        .price-tag { font-size: 1.3rem; font-weight: bold; color: var(--gold); margin-bottom: 15px; }
 
-    .btn-gold:hover {
-      background-color: var(--gold-hover);
-    }
+        /* Modals */
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center;
+            z-index: 1000; padding: 20px; backdrop-filter: blur(5px);
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: var(--modal-bg); width: 100%; max-width: 500px; padding: 30px;
+            border-radius: 10px; border: 1px solid var(--gold); position: relative; max-height: 90vh; overflow-y: auto;
+        }
+        .close-modal { position: absolute; top: 15px; right: 20px; font-size: 1.5rem; cursor: pointer; color: var(--text-muted); }
+        .close-modal:hover { color: var(--gold); }
 
-    /* Optional Toggle Button for Testing */
-    .admin-toggle {
-      margin-top: 25px;
-      background: transparent;
-      border: 1px dashed #444;
-      color: var(--text-muted);
-      padding: 6px 12px;
-      font-size: 12px;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-  </style>
+        .form-group { margin-bottom: 15px; text-align: left; }
+        .form-group label { display: block; font-size: 0.85rem; color: var(--gold); margin-bottom: 5px; }
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%; padding: 10px; background: #0c0c0e; border: 1px solid var(--border);
+            color: #fff; border-radius: 4px; outline: none;
+        }
+        .form-group input:focus { border-color: var(--gold); }
+        .error-msg { color: var(--danger); font-size: 0.8rem; margin-top: 5px; display: none; }
+
+        /* Admin Styles */
+        .admin-modal { max-width: 900px; }
+        .admin-tabs { display: flex; gap: 10px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+        .tab-btn { padding: 10px 20px; background: transparent; color: var(--text-muted); border: none; cursor: pointer; border-bottom: 2px solid transparent; }
+        .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); font-weight: bold; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.85rem; }
+        .table th, .table td { padding: 10px; border: 1px solid var(--border); text-align: left; }
+        .table th { background: #101014; color: var(--gold); }
+
+        /* Footer */
+        footer { margin-top: 60px; padding: 30px; text-align: center; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 0.85rem; }
+        .admin-link { color: #333; cursor: pointer; font-size: 0.75rem; text-decoration: none; margin-top: 10px; display: inline-block; }
+        .admin-link:hover { color: var(--gold); }
+    </style>
 </head>
 <body>
 
-  <div class="container">
-    <!-- Brand Logo -->
-    <div class="logo-container">
-      <img src="YOUR_LOGO_IMAGE_URL_HERE.png" alt="THE BROS Logo">
+    <!-- Header -->
+    <header>
+        <div class="logo">THE BROS</div>
+        <div class="nav-links">
+            <span id="userGreeting" style="color: var(--gold); font-size: 0.85rem;"></span>
+            <button class="btn-outline" id="authBtn" onclick="openAuthModal()">Sign In</button>
+        </div>
+    </header>
+
+    <!-- 03. Welcome Message -->
+    <section class="hero">
+        <h1>WELCOME TO THE BROS</h1>
+        <p>Step into the realm of luxury scents and exclusive decants. Experience hand-crafted original bottles and premium 10ml travel decants curated for royalty.</p>
+    </section>
+
+    <!-- Store Catalog -->
+    <h2 class="section-title">OUR EXCLUSIVE COLLECTION</h2>
+    <div class="product-grid" id="productGrid"></div>
+
+    <!-- 03. Sign In / Register Modal -->
+    <div class="modal" id="authModal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('authModal')">✕</span>
+            <h2 style="color: var(--gold); margin-bottom: 20px; text-align: center;">CREATE YOUR ACCOUNT</h2>
+            <form id="registerForm" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label>Full Name *</label>
+                    <input type="text" id="regName" required>
+                </div>
+                <div class="form-group">
+                    <label>Phone Number 1 (Primary) *</label>
+                    <input type="tel" id="regPhone1" placeholder="07XXXXXXXX" required>
+                </div>
+                <div class="form-group">
+                    <label>Phone Number 2 (Optional)</label>
+                    <input type="tel" id="regPhone2" placeholder="07XXXXXXXX">
+                </div>
+                <div class="form-group">
+                    <label>Email Address *</label>
+                    <input type="email" id="regEmail" required>
+                </div>
+                <div class="form-group">
+                    <label>Password *</label>
+                    <input type="password" id="regPass" required minlength="6">
+                </div>
+                <div class="form-group">
+                    <label>Confirm Password *</label>
+                    <input type="password" id="regPassConfirm" required>
+                    <div class="error-msg" id="passError">Passwords do not match!</div>
+                </div>
+                <div class="form-group">
+                    <label>Home Address (For Delivery) *</label>
+                    <textarea id="regAddress" rows="3" required></textarea>
+                </div>
+                <button type="submit" class="btn-gold" style="width: 100%;">Sign Up & Continue</button>
+            </form>
+        </div>
     </div>
 
-    <!-- Sign-In Form (Controlled Option) -->
-    <div id="authContainer" class="signin-section">
-      <input type="email" placeholder="Email" class="input-field">
-      <input type="password" placeholder="Password" class="input-field">
-      <button class="btn-gold">SIGN IN</button>
+    <!-- 04. Hidden Admin Login Modal -->
+    <div class="modal" id="adminLoginModal">
+        <div class="modal-content" style="max-width: 400px;">
+            <span class="close-modal" onclick="closeModal('adminLoginModal')">✕</span>
+            <h2 style="color: var(--gold); margin-bottom: 20px; text-align: center;">ADMIN LOGIN</h2>
+            <div class="form-group">
+                <label>Enter Secret Password</label>
+                <input type="password" id="adminPassInput">
+            </div>
+            <button class="btn-gold" style="width: 100%;" onclick="verifyAdmin()">Login to Dashboard</button>
+        </div>
     </div>
 
-    <!-- Quick Toggle Button (Optional) -->
-    <button class="admin-toggle" onclick="toggleSignIn()">Toggle Sign-In Form</button>
-  </div>
+    <!-- 04. Hidden Admin Panel Modal -->
+    <div class="modal" id="adminPanelModal">
+        <div class="modal-content admin-modal">
+            <span class="close-modal" onclick="closeModal('adminPanelModal')">✕</span>
+            <h2 style="color: var(--gold); margin-bottom: 15px;">THE BROS - ADMIN PANEL</h2>
+            
+            <div class="admin-tabs">
+                <button class="tab-btn active" onclick="switchAdminTab('addProductTab')">Add/Edit Product</button>
+                <button class="tab-btn" onclick="switchAdminTab('salesChartTab')">Sales & Profit</button>
+                <button class="tab-btn" onclick="switchAdminTab('customerDetailsTab')">Customer Database</button>
+            </div>
 
-  <script>
-    // --- CONFIGURATION ---
-    // Change this variable to true whenever you want sign-in options enabled
-    let enableSignIn = false; 
+            <!-- Tab 1: Add Product -->
+            <div class="tab-content active" id="addProductTab">
+                <form id="addProductForm" onsubmit="handleAddProduct(event)">
+                    <div class="form-group">
+                        <label>Perfume Title</label>
+                        <input type="text" id="pTitle" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Image URL</label>
+                        <input type="url" id="pImg" required placeholder="https://images.unsplash.com/...">
+                    </div>
+                    <div class="form-group">
+                        <label>Details / Scent Notes</label>
+                        <textarea id="pDetails" rows="2" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Size Options Available</label>
+                        <select id="pAvailability" onchange="toggleSizeInputs()">
+                            <option value="both">Both Available (100ml Bottle & 10ml Decant)</option>
+                            <option value="100ml">100ml Bottle Only</option>
+                            <option value="10ml">10ml Decant Only</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; gap: 15px;">
+                        <div class="form-group" id="group100ml" style="flex: 1;">
+                            <label>100ml Bottle Price (LKR)</label>
+                            <input type="number" id="pPrice100ml" value="0">
+                        </div>
+                        <div class="form-group" id="group10ml" style="flex: 1;">
+                            <label>10ml Decant Price (LKR)</label>
+                            <input type="number" id="pPrice10ml" value="0">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>In Stock Status</label>
+                        <select id="pInStock">
+                            <option value="true">In Stock (Available for Buy Now)</option>
+                            <option value="false">Out of Stock (Wishlist Only)</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-gold">Save Product to Store</button>
+                </form>
+            </div>
 
-    const authContainer = document.getElementById('authContainer');
+            <!-- Tab 2: Sales & Profit Chart -->
+            <div class="tab-content" id="salesChartTab">
+                <h3 style="color: var(--gold); margin-bottom: 10px;">Profit & Cost Manager</h3>
+                <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label>Add Cost (LKR)</label>
+                        <input type="number" id="addCostInput" placeholder="e.g. 15000">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>Add Revenue (LKR)</label>
+                        <input type="number" id="addRevenueInput" placeholder="e.g. 28000">
+                    </div>
+                    <button class="btn-gold" style="height: 40px; margin-top: 22px;" onclick="addFinancialRecord()">Log Entry</button>
+                </div>
+                <div style="background: #000; padding: 15px; border-radius: 8px;">
+                    <canvas id="profitChart" height="200"></canvas>
+                </div>
+            </div>
 
-    function updateLayout() {
-      if (enableSignIn) {
-        authContainer.style.display = 'flex';
-      } else {
-        authContainer.style.display = 'none';
-      }
-    }
+            <!-- Tab 3: Customer Details -->
+            <div class="tab-content" id="customerDetailsTab">
+                <h3 style="color: var(--gold);">Registered Customers</h3>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Phone 1</th>
+                            <th>Phone 2</th>
+                            <th>Email</th>
+                            <th>Address</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customerTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
-    // Function to easily switch modes manually
-    function toggleSignIn() {
-      enableSignIn = !enableSignIn;
-      updateLayout();
-    }
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2026 THE BROS PERFUMES & DECANTS. All Rights Reserved.</p>
+        <span class="admin-link" onclick="openAdminLogin()">🔒 Secret Admin Access</span>
+    </footer>
 
-    // Initialize layout on page load
-    updateLayout();
-  </script>
+    <script>
+        // WHATSAPP CONFIGURATION
+        const WHATSAPP_NUMBER = "94784744888"; // Target 07847 44 888 in LK country code
+        const ADMIN_PASSWORD = "brosadmin"; // Default Admin Password
 
+        // DEFAULT PRODUCTS (Used if localStorage is empty)
+        const defaultProducts = [
+            {
+                id: 1, title: "Royal Oud Velvet",
+                img: "https://images.unsplash.com/photo-1523293182086-7651a899d37f?auto=format&fit=crop&w=500&q=80",
+                details: "Top Notes: Saffron, Heart: Cambodian Oud, Base: Amber.",
+                availability: "both", price100ml: 12500, price10ml: 2800, inStock: true
+            },
+            {
+                id: 2, title: "Ceylon Cardamom & Cedar",
+                img: "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=500&q=80",
+                details: "Top Notes: Green Cardamom, Heart: Atlas Cedar, Base: Musk.",
+                availability: "10ml", price100ml: 0, price10ml: 2200, inStock: true
+            },
+            {
+                id: 3, title: "Midnight Jasmine Elixir",
+                img: "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?auto=format&fit=crop&w=500&q=80",
+                details: "Top Notes: Night Jasmine, Heart: Vanilla, Base: Sandalwood.",
+                availability: "100ml", price100ml: 9800, price10ml: 0, inStock: false
+            }
+        ];
+
+        // LOCAL STORAGE STATE INITS
+        let products = JSON.parse(localStorage.getItem('bros_products')) || defaultProducts;
+        let currentUser = JSON.parse(localStorage.getItem('bros_currentUser')) || null;
+        let customers = JSON.parse(localStorage.getItem('bros_customers')) || [];
+        let financials = JSON.parse(localStorage.getItem('bros_financials')) || { costs: [10000], revenues: [25000], labels: ['Batch 1'] };
+
+        // INITIALIZE APP
+        document.addEventListener('DOMContentLoaded', () => {
+            renderProducts();
+            updateUserNav();
+        });
+
+        // RENDER PRODUCTS
+        function renderProducts() {
+            const grid = document.getElementById('productGrid');
+            grid.innerHTML = products.map(p => {
+                let sizeOptionsHTML = '';
+                if(p.availability === 'both') {
+                    sizeOptionsHTML = `<option value="100ml">100ml Bottle - LKR ${p.price100ml.toLocaleString()}</option>
+                                       <option value="10ml">10ml Decant - LKR ${p.price10ml.toLocaleString()}</option>`;
+                } else if(p.availability === '100ml') {
+                    sizeOptionsHTML = `<option value="100ml">100ml Bottle - LKR ${p.price100ml.toLocaleString()}</option>`;
+                } else {
+                    sizeOptionsHTML = `<option value="10ml">10ml Decant - LKR ${p.price10ml.toLocaleString()}</option>`;
+                }
+
+                return `
+                <div class="product-card">
+                    <img src="${p.img}" alt="${p.title}" class="product-img">
+                    <div class="product-body">
+                        <div>
+                            <div class="product-title">${p.title}</div>
+                            <div class="product-desc">${p.details}</div>
+                            <div class="variant-selector">
+                                <label>Available Sizes:</label>
+                                <select class="variant-select" id="sizeSelect_${p.id}">
+                                    ${sizeOptionsHTML}
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            ${p.inStock ? 
+                                `<button class="btn-gold" style="width:100%" onclick="handleBuyNow(${p.id})">BUY NOW (WHATSAPP)</button>` : 
+                                `<button class="btn-outline" style="width:100%" onclick="handleWishlist('${p.title}')">♡ ADD TO WISHLIST</button>`
+                            }
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        // 03. AUTHENTICATION LOGIC
+        function updateUserNav() {
+            const greeting = document.getElementById('userGreeting');
+            const authBtn = document.getElementById('authBtn');
+            if(currentUser) {
+                greeting.innerText = `Hello, ${currentUser.name}`;
+                authBtn.innerText = `Sign Out`;
+                authBtn.onclick = logout;
+            } else {
+                greeting.innerText = ``;
+                authBtn.innerText = `Sign In`;
+                authBtn.onclick = () => openModal('authModal');
+            }
+        }
+
+        function handleRegister(e) {
+            e.preventDefault();
+            const pass = document.getElementById('regPass').value;
+            const passConfirm = document.getElementById('regPassConfirm').value;
+            
+            if(pass !== passConfirm) {
+                document.getElementById('passError').style.display = 'block';
+                return;
+            }
+            document.getElementById('passError').style.display = 'none';
+
+            const newUser = {
+                name: document.getElementById('regName').value,
+                phone1: document.getElementById('regPhone1').value,
+                phone2: document.getElementById('regPhone2').value || 'N/A',
+                email: document.getElementById('regEmail').value,
+                address: document.getElementById('regAddress').value
+            };
+
+            currentUser = newUser;
+            customers.push(newUser);
+            localStorage.setItem('bros_currentUser', JSON.stringify(currentUser));
+            localStorage.setItem('bros_customers', JSON.stringify(customers));
+
+            updateUserNav();
+            closeModal('authModal');
+            alert('Welcome to The Bros! Account created successfully.');
+        }
+
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('bros_currentUser');
+            updateUserNav();
+        }
+
+        // 05. BUY NOW (DIRECT TO WHATSAPP 07847 44 888)
+        function handleBuyNow(productId) {
+            // Require Sign In before purchasing
+            if(!currentUser) {
+                alert("Please Sign In / Register before making a purchase.");
+                openModal('authModal');
+                return;
+            }
+
+            const p = products.find(item => item.id === productId);
+            const sizeSelect = document.getElementById(`sizeSelect_${productId}`).value;
+            const price = sizeSelect === '100ml' ? p.price100ml : p.price10ml;
+
+            const message = `Hello *THE BROS*, I want to buy:%0A%0A` +
+                `*Product:* ${p.title}%0A` +
+                `*Size:* ${sizeSelect}%0A` +
+                `*Price:* LKR ${price.toLocaleString()}%0A%0A` +
+                `*Customer Details:*%0A` +
+                `• *Name:* ${currentUser.name}%0A` +
+                `• *Phone 1:* ${currentUser.phone1}%0A` +
+                `• *Phone 2:* ${currentUser.phone2}%0A` +
+                `• *Email:* ${currentUser.email}%0A` +
+                `• *Delivery Address:* ${currentUser.address}`;
+
+            window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${message}`, '_blank');
+        }
+
+        function handleWishlist(title) {
+            alert(`"${title}" has been added to your Wishlist! We will notify you on WhatsApp when back in stock.`);
+        }
+
+        // 04. HIDDEN ADMIN PANEL LOGIC
+        function openAdminLogin() { openModal('adminLoginModal'); }
+        
+        function verifyAdmin() {
+            const pass = document.getElementById('adminPassInput').value;
+            if(pass === ADMIN_PASSWORD) {
+                closeModal('adminLoginModal');
+                openModal('adminPanelModal');
+                renderCustomerTable();
+                initChart();
+            } else {
+                alert('Incorrect Admin Password!');
+            }
+        }
+
+        function switchAdminTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        function toggleSizeInputs() {
+            const avail = document.getElementById('pAvailability').value;
+            document.getElementById('group100ml').style.display = (avail === 'both' || avail === '100ml') ? 'block' : 'none';
+            document.getElementById('group10ml').style.display = (avail === 'both' || avail === '10ml') ? 'block' : 'none';
+        }
+
+        function handleAddProduct(e) {
+            e.preventDefault();
+            const newProd = {
+                id: Date.now(),
+                title: document.getElementById('pTitle').value,
+                img: document.getElementById('pImg').value,
+                details: document.getElementById('pDetails').value,
+                availability: document.getElementById('pAvailability').value,
+                price100ml: parseFloat(document.getElementById('pPrice100ml').value) || 0,
+                price10ml: parseFloat(document.getElementById('pPrice10ml').value) || 0,
+                inStock: document.getElementById('pInStock').value === 'true'
+            };
+
+            products.push(newProd);
+            localStorage.setItem('bros_products', JSON.stringify(products));
+            renderProducts();
+            alert('Product added successfully!');
+            document.getElementById('addProductForm').reset();
+        }
+
+        function renderCustomerTable() {
+            const tbody = document.getElementById('customerTableBody');
+            tbody.innerHTML = customers.map(c => `
+                <tr>
+                    <td>${c.name}</td>
+                    <td>${c.phone1}</td>
+                    <td>${c.phone2}</td>
+                    <td>${c.email}</td>
+                    <td>${c.address}</td>
+                </tr>
+            `).join('');
+        }
+
+        // SALES & PROFIT CHART
+        let myChart = null;
+        function initChart() {
+            const ctx = document.getElementById('profitChart').getContext('2d');
+            if(myChart) myChart.destroy();
+            myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: financials.labels,
+                    datasets: [
+                        { label: 'Cost (LKR)', data: financials.costs, backgroundColor: '#e74c3c' },
+                        { label: 'Revenue (LKR)', data: financials.revenues, backgroundColor: '#2ecc71' }
+                    ]
+                },
+                options: { responsive: true, plugins: { legend: { labels: { color: '#fff' } } } }
+            });
+        }
+
+        function addFinancialRecord() {
+            const cost = parseFloat(document.getElementById('addCostInput').value) || 0;
+            const rev = parseFloat(document.getElementById('addRevenueInput').value) || 0;
+            financials.labels.push(`Entry ${financials.labels.length + 1}`);
+            financials.costs.push(cost);
+            financials.revenues.push(rev);
+            localStorage.setItem('bros_financials', JSON.stringify(financials));
+            initChart();
+        }
+
+        // MODAL HELPERS
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+    </script>
 </body>
 </html>
